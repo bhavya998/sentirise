@@ -24,7 +24,7 @@ class SentimentClassifier:
         adapter_path: str = str(ADAPTER_DIR),
         model_id: str = BASE_MODEL,
         quantize_4bit: bool = True,
-        max_new_tokens: int = 5,
+        max_new_tokens: int = 10,
     ) -> None:
         """Initialize the classifier with paths and inference settings.
 
@@ -89,7 +89,7 @@ class SentimentClassifier:
             Dict with 'label' (str), 'confidence' (float), and 'raw_output' (str).
         """
         self._load()
-        prompt = format_for_inference(text)
+        prompt = format_for_inference(text, self._tokenizer)
         inputs = self._tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
 
         device = next(self._model.parameters()).device

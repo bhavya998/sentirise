@@ -2,19 +2,29 @@
 
 from __future__ import annotations
 
-from sentirise.dataset import format_for_inference, load_imdb_dataset
+from unittest.mock import MagicMock
+
+from sentirise.dataset import SYSTEM_PROMPT, USER_TEMPLATE, format_for_inference, load_imdb_dataset
 
 
 class TestFormatForInference:
-    def test_contains_prompt(self) -> None:
-        result = format_for_inference("Great movie!")
-        assert "Classify the sentiment" in result
+    def test_contains_review_text(self) -> None:
+        mock_tok = MagicMock()
+        mock_tok.apply_chat_template.return_value = "<formatted>Great movie!</formatted>"
+        result = format_for_inference("Great movie!", mock_tok)
         assert "Great movie!" in result
-        assert "Sentiment:" in result
+        # Verify chat template was called with correct structure
+        call_args = mock_tok.apply_chat_template.call_args
+        messages = call_args[0][0]
+        assert messages[0]["role"] == "system"
+        assert messages[1]["role"] == "user"
+        assert "Great movie!" in messages[1]["content"]
 
-    def test_ends_with_space(self) -> None:
-        result = format_for_inference("Test text")
-        assert result.endswith(" ")
+    def test_system_prompt_present(self) -> None:
+        assert "positive" in SYSTEM_PROMPT or "sentiment" in SYSTEM_PROMPT.lower()
+
+    def test_user_template_has_placeholder(self) -> None:
+        assert "{text}" in USER_TEMPLATE
 
 
 class TestLoadImdbDataset:
