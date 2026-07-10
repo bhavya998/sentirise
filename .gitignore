@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[oc]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets
+.env
+.env.local
+
+# Data (datasets + model adapters - too large for git)
+data/
+
+# Next.js
+ui/node_modules/
+ui/.next/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/

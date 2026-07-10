@@ -1,0 +1,56 @@
+[project]
+name = "sentirise"
+version = "0.1.0"
+description = "QLoRA fine-tuned sentiment classifier on Qwen3-0.6B"
+readme = "README.md"
+authors = [
+    { name = "noob_boy", email = "bhavya260@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "accelerate>=1.14.0",
+    "bitsandbytes>=0.49.2",
+    "datasets>=4.0.0",
+    "fastapi>=0.139.0",
+    "peft>=0.17.0",
+    "pydantic>=2.13.4",
+    "python-dotenv>=1.2.2",
+    "python-multipart>=0.0.32",
+    "rich>=15.0.0",
+    "torch>=2.11.0",
+    "transformers>=5.13.0",
+    "trl>=0.20.0",
+    "typer>=0.26.8",
+    "uvicorn[standard]>=0.51.0",
+]
+
+[project.scripts]
+sentirise = "sentirise.cli:app"
+
+[build-system]
+requires = ["uv_build>=0.11.7,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "requests>=2.34.2",
+    "ruff>=0.15.20",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
