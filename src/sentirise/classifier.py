@@ -119,6 +119,11 @@ class SentimentClassifier:
     def _parse_output(generated: str) -> tuple[str, float]:
         """Parse the model output to extract label and a heuristic confidence.
 
+        Confidence tiers:
+          0.85 — output starts with the label (clean generation)
+          0.70 — label found as substring (noisy generation)
+          0.00 — no label found → "unknown"
+
         Args:
             generated: Raw model generation after the prompt.
 
@@ -129,9 +134,7 @@ class SentimentClassifier:
 
         for label in LABELS:
             if gen_lower.startswith(label):
-                clean = gen_lower[: len(label)]
-                scores = _estimate_confidence(clean)
-                return label, scores
+                return label, 0.85
 
         if "positive" in gen_lower and "negative" not in gen_lower:
             return "positive", 0.7
@@ -139,15 +142,3 @@ class SentimentClassifier:
             return "negative", 0.7
 
         return "unknown", 0.0
-
-
-def _estimate_confidence(word: str) -> float:
-    """Heuristic confidence based on output cleanliness (0.5-1.0 range).
-
-    Args:
-        word: The extracted label word.
-
-    Returns:
-        Confidence score between 0.5 and 1.0.
-    """
-    return 0.85

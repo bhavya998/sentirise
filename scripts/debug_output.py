@@ -3,7 +3,7 @@
 import sys
 sys.stdout.reconfigure(encoding="utf-8")
 
-from sentirise.classifier import SentimentClassifier
+from sentirise.classifier import SentimentClassifier  # noqa: E402
 
 texts = [
     "I loved every minute of it. Highly recommend!",

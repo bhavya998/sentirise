@@ -7,6 +7,9 @@ GET  /info      - model info
 
 from __future__ import annotations
 
+import os
+import threading
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -14,13 +17,16 @@ from pydantic import BaseModel, Field
 from sentirise.classifier import SentimentClassifier
 
 _classifier: SentimentClassifier | None = None
+_classifier_lock = threading.Lock()
 
 
 def _get_classifier() -> SentimentClassifier:
-    """Get or lazily initialize the global classifier singleton."""
+    """Get or lazily initialize the global classifier singleton (thread-safe)."""
     global _classifier  # noqa: PLW0603
     if _classifier is None:
-        _classifier = SentimentClassifier()
+        with _classifier_lock:
+            if _classifier is None:
+                _classifier = SentimentClassifier()
     return _classifier
 
 
@@ -56,20 +62,22 @@ def create_app() -> FastAPI:
         title="sentirise - QLoRA Sentiment Classifier",
         version="0.1.0",
     )
+
+    cors_origins = os.getenv("SENTIRISE_CORS_ORIGINS", "*").split(",")
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=cors_origins,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
     @app.get("/health")
-    async def health() -> dict[str, str]:
+    def health() -> dict[str, str]:
         """Liveness check endpoint."""
         return {"status": "ok"}
 
     @app.get("/info", response_model=InfoResponse)
-    async def info() -> InfoResponse:
+    def info() -> InfoResponse:
         """Get model information."""
         from pathlib import Path
 
@@ -82,8 +90,12 @@ def create_app() -> FastAPI:
         )
 
     @app.post("/classify", response_model=ClassifyResponse)
-    async def classify(req: ClassifyRequest) -> ClassifyResponse:
-        """Classify the sentiment of the provided text."""
+    def classify(req: ClassifyRequest) -> ClassifyResponse:
+        """Classify the sentiment of the provided text.
+
+        Runs synchronously so FastAPI dispatches it to a threadpool,
+        avoiding event-loop blocking during GPU inference.
+        """
         clf = _get_classifier()
         result = clf.classify(req.text)
         return ClassifyResponse(**result)

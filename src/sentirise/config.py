@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 BASE_MODEL = "Qwen/Qwen3-0.6B"
-ADAPTER_DIR = Path("data/adapters")
-DATASET_CACHE = Path("data/cache")
-MODEL_OUTPUT = Path("data/model_output")
+ADAPTER_DIR = PROJECT_ROOT / "data" / "adapters"
 
 LABELS = ["negative", "positive"]
 LABEL_TO_ID = {label: i for i, label in enumerate(LABELS)}
