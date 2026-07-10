@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://python.org)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white)](https://nextjs.org)
 [![PyTorch](https://img.shields.io/badge/PyTorch-CUDA-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org)
-[![Tests](https://img.shields.io/badge/Tests-26%20passing-22c55e)]()
+[![Tests](https://img.shields.io/badge/Tests-27%20passing-22c55e)]()
 [![License](https://img.shields.io/badge/License-MIT-22c55e)](LICENSE)
 
 </div>
@@ -18,7 +18,7 @@
 
 A complete QLoRA fine-tuning pipeline that turns **Qwen3-0.6B** into a sentiment classifier:
 
-1. **Train** — Fine-tune with 4-bit QLoRA (PEFT) on IMDB reviews
+1. **Train** — Fine-tune with 4-bit QLoRA (PEFT) on IMDB reviews using ChatML templates
 2. **Serve** — FastAPI backend with `/classify` endpoint
 3. **Classify** — Next.js frontend for real-time sentiment prediction
 
@@ -42,8 +42,8 @@ cd sentirise
 uv sync
 cd ui && npm install && cd ..
 
-# Train (downloads Qwen3-0.6B + IMDB, ~2 min on GPU)
-uv run sentirise train --epochs 1 --max-train 500 --max-eval 100
+# Train (downloads Qwen3-0.6B + IMDB, ~25 min on GPU for 3 epochs)
+uv run sentirise train --epochs 3 --max-train 2000 --max-eval 400
 
 # Serve backend
 uv run sentirise serve         # FastAPI on :8000
@@ -59,20 +59,20 @@ Open `http://localhost:3000`, type text, get sentiment.
 ## How It Works
 
 ```
-IMDB Reviews (500 samples)
+IMDB Reviews (2000 samples)
         ↓
-  Instruction Format
-  "Classify the sentiment of: ... Review → positive/negative"
+  ChatML Template (system/user/assistant messages, enable_thinking=False)
+  "You are a sentiment classifier. Respond with positive or negative. Review: ... Sentiment: positive"
         ↓
   Qwen3-0.6B (4-bit NF4 quantized)
   + LoRA adapters (r=16, α=32)
   on q_proj, k_proj, v_proj, o_proj
         ↓
-  SFTTrainer (TRL) — 1 epoch, lr=2e-4
+  SFTTrainer (TRL) — 3 epochs, lr=2e-4
         ↓
   ~18MB adapter saved to data/adapters/
         ↓
-  Inference: base model + adapter → "positive"/"negative"
+  Inference: base model + adapter + ChatML prompt → "positive"/"negative"
 ```
 
 ---
@@ -137,7 +137,7 @@ sentirise/
 │   ├── classifier.py     Load base + adapter, classify sentiment
 │   ├── api.py            FastAPI (health, info, classify)
 │   └── cli.py            CLI (train, serve, classify, batch)
-├── tests/                26 tests (config, dataset, classifier, API, E2E)
+├── tests/                27 tests (config, dataset, classifier, API, E2E)
 ├── scripts/              Training check + classifier test scripts
 ├── ui/                   Next.js 16 frontend
 ├── data/                 Adapter output (gitignored)
@@ -150,7 +150,7 @@ sentirise/
 ## Testing
 
 ```bash
-make test         # 26 tests: config, dataset, classifier, API, E2E
+make test         # 27 tests: config, dataset, classifier, API, E2E
 make lint         # ruff + eslint
 ```
 
